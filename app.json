@@ -1,0 +1,26 @@
+{
+  "expo": {
+    "name": "BxProject",
+    "slug": "BxProject",
+    "privacy": "public",
+    "android": {
+      "permissions": ["CAMERA_ROLL"]
+    },
+    "platforms": [
+      "ios",
+      "android",
+      "web"
+    ],
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "ios": {
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "This app requires access to your photo library."
+      }
+    }
+  }
+}
