@@ -1,11 +1,15 @@
 import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {View, Text, TextInput, Keyboard, FlatList, StyleSheet, Image, Pressable, TouchableOpacity} from 'react-native';
+import {View, Text, TextInput, Keyboard, FlatList, StyleSheet, Image, Pressable, TouchableOpacity, Button} from 'react-native';
 import {useNavigation} from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialIconsIcon from "react-native-vector-icons/MaterialIcons";
 import EvilIcon from "react-native-vector-icons/EvilIcons";
 import MaterialIconsIcon2 from "react-native-vector-icons/MaterialCommunityIcons";
 import {Bubble, Composer, GiftedChat, InputToolbar, Send} from 'react-native-gifted-chat'
+import * as ImagePicker from "expo-image-picker";
+import Constants from "expo-constants";
+import * as Permissions from "expo-permissions";
+import callGoogleVisionAsync from './../components/helperFunctions.js';
 
 
 const ChatBot = ({navigation}) => {
@@ -19,14 +23,27 @@ const ChatBot = ({navigation}) => {
     }, []);
 
     const [backgroundVisibility, setBackgroundVisibility] = useState(true);
-    const flatListRef = useRef();
     const [message, setMessage] = useState('');
     const [messages, setMessages] = useState([]);
 
+    const [image, setImage] = useState(null);
+    const [finaltext, setText] = useState(null);
+
+
+    useEffect(() => {
+        (async () => {
+            if (Constants.platform?.ios) {
+                const { status } = await Permissions.askAsync(Permissions.MEDIA_LIBRARY);
+                if (status !== 'granted') {
+                    alert('Sorry, we need camera roll permissions to make this work!');
+                }
+            }
+        })();
+    }, []);
+
 
     // Function to handle sending messages
-    const handleSend = (newMessages) => {
-
+    const handleSend = useCallback((newMessages) => {
         //eliminate greeting background
         setBackgroundVisibility(false);
 
@@ -36,28 +53,64 @@ const ChatBot = ({navigation}) => {
         );
 
         Keyboard.dismiss();
+        setImage(null);
+        setText(null);
 
-        // Check if the user's message is not an automated response to avoid infinite loop
-        if (newMessages.length && newMessages[0].text !== "Automated Response") {
-            // Simulate an automated response with delay
-            setTimeout(() => {
-                const automatedResponse = {
-                    _id: Math.round(Math.random() * 1000000),
-                    text: "Automated Response",
-                    createdAt: new Date(),
-                    user: {
-                        _id: 2, // You can use a different user ID for the bot
-                        name: 'Bot', // Optionally set the bot's name
-                    },
-                };
+        // Simulate an automated response with delay
+        setTimeout(() => {
+            const automatedResponse = {
+                _id: Math.round(Math.random() * 1000000),
+                text: "Automated Response",
+                createdAt: new Date(),
+                user: {
+                    _id: 2, // You can use a different user ID for the bot
+                    name: 'Bot', // Optionally set the bot's name
+                },
+            };
 
-                // Add the automated response to the chat
-                setMessages((previousMessages) =>
-                    GiftedChat.append(previousMessages, [automatedResponse])
-                );
-            }, 2000);
+            // Add the automated response to the chat
+            setMessages((previousMessages) =>
+                GiftedChat.append(previousMessages, [automatedResponse])
+            );
+        }, 2000);
+    }, []);
+
+    // Function to open the camera roll
+    const openCamera = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.All,
+            base64: true,
+            allowsEditing: true,
+            quality: 1,
+        });
+
+        if (!result.canceled) {
+            setImage(result.assets[0].uri);
+            const responseData = await callGoogleVisionAsync(result.assets[0].base64);
+            if (responseData.text) {
+                setText(responseData.text.replace(/(\r\n|\n|\r)/gm, ' '));
+            } else {
+                setText("Text not found in response data.");
+            }
         }
     };
+
+    // Handle sending messages after state update
+    useEffect(() => {
+        if (image && finaltext) {
+            let processedMessage = {
+                _id: Math.round(Math.random() * 1000000),
+                text: finaltext, // The text message
+                image: image, // The image URI or base64 data
+                createdAt: new Date(),
+                user: {
+                    _id: 1, // Assuming the current user is sending the message
+                },
+            };
+            handleSend([processedMessage]);
+        }
+    }, [image, finaltext, handleSend]);
+
 
     // Custom function to render the avatar for left messages
     const renderAvatar = (props) => {
@@ -76,18 +129,13 @@ const ChatBot = ({navigation}) => {
         return null;
     };
 
-    // Custom action button component
-    const renderCustomActions = (props) => (
+    // Camera button component
+    const renderCustomActions = () => (
         <TouchableOpacity onPress={openCamera}>
-                <EvilIcon name={"camera"} style={styles.cameraIcon}/>
+            <EvilIcon name={"camera"} style={styles.cameraIcon}/>
         </TouchableOpacity>
     );
 
-    // Function to handle the custom action
-    const openCamera = () => {
-        // Implement custom action logic here
-        console.log("Custom action pressed");
-    };
 
     // Custom text input composer component
     const renderCustomComposer = (props) => (

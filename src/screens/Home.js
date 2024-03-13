@@ -1,13 +1,10 @@
 import React, {Component, useLayoutEffect, useState} from "react";
 import {StyleSheet, View, Text, Image, ImageComponent, Pressable, Button} from "react-native";
 import EntypoIcon from "react-native-vector-icons/Entypo";
-import Svg, { Ellipse } from "react-native-svg";
-import FeatherIcon from "react-native-vector-icons/Feather";
 import MaterialIconsIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import Icon from "react-native-vector-icons/Ionicons";
 import {useNavigation} from "@react-navigation/native";
 import HomeBar from "../components/HomeBar";
-import close from "react-native-vector-icons/Feather";
 
 
 function TouchableOpacity(props) {
@@ -35,7 +32,7 @@ const Home = ({navigation}) => {
         <View style={styles.mainContainer}>
             <View style={styles.navBar}>
                 <MaterialIconsIcon name={'account'} style={styles.accountIcon}/>
-                <Icon name="ios-menu" style={styles.menuIcon}/>
+                <Icon name="menu" style={styles.menuIcon}/>
             </View>
 
             <View style={styles.conturiContainer}>
@@ -87,29 +84,6 @@ const Home = ({navigation}) => {
                     style={styles.image4}
                     />
             </View>
-
-            {/*<Pressable onPress={toggleVisibility}*/}
-            {/*           style={styles.bubbleContainer}*/}
-            {/*>*/}
-            {/*    <Image*/}
-            {/*        source={require("../assets/bubble2.png")}*/}
-            {/*        resizeMode="contain"*/}
-            {/*        style={styles.chatBubble}*/}
-            {/*    />*/}
-            {/*</Pressable>*/}
-
-            {/*{isVisible && (*/}
-            {/*    <View style={styles.chatBox}>*/}
-            {/*        <Pressable onPress={toggleVisibility}>*/}
-            {/*            <MaterialIconsIcon*/}
-            {/*                name="close"*/}
-            {/*                style={styles.closeChatIcon}*/}
-            {/*            />*/}
-            {/*            </Pressable>*/}
-            {/*        /!* Add your chat UI components here *!/*/}
-
-            {/*    </View>*/}
-            {/*)}*/}
             <HomeBar/>
         </View>
     );
