@@ -1,6 +1,7 @@
 import {StyleSheet, View} from "react-native";
 import MaterialIconsIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import EntypoIcon from "react-native-vector-icons/Entypo";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import React from "react";
 import {useNavigation} from "@react-navigation/native";
 
@@ -11,16 +12,22 @@ const HomeBar = () => {
     return(
         <View style={styles.homeBar}>
             <View style={styles.iconRow}>
+                <EntypoIcon name="home" onPress={() =>
+                                navigation.navigate('Home')
+                            }
+                            style={styles.homeIcon}/>
                 <MaterialIconsIcon name={"robot"}
                                    onPress={() =>
                                        navigation.navigate('Chatbot')
                                    }
                                    style={styles.chatBotIcon}
                 />
-                <EntypoIcon name="home" onPress={() =>
-                            navigation.navigate('Home')
-                            }
-                            style={styles.homeIcon}/>
+                <MaterialIconsIcon name={'plus'} style={styles.addIcon}
+                                   onPress={() =>
+                                       navigation.navigate('AddTransaction')
+                                   }/>
+                <Ionicons name={'stats-chart'}
+                          style={styles.statsIcon}/>
                 <EntypoIcon name="credit-card"
                             onPress={() =>
                                 navigation.navigate('CreditCardsScreen')
@@ -52,22 +59,31 @@ const styles = StyleSheet.create({
     chatBotIcon: {
         position: "relative",
         color: "grey",
-        fontSize: 30,
+        fontSize: 32,
+        marginLeft: 10,
         height: 35,
         width: 35
     },
-    homeIcon: {
+    statsIcon: {
+        position: "relative",
+        color: "grey",
+        fontSize: 29,
+        marginLeft: 10,
+        top: 2,
+        height: 35,
+        width: 35
+    },
+    addIcon: {
         color: "rgba(255,255,255,1)",
         backgroundColor: "rgba(113,77,145,1)",
-        borderRadius: 25,
+        borderRadius: 23,
         paddingLeft: 13,
-        paddingTop: 12,
+        paddingTop: 11,
         position: "relative",
-        marginLeft: 50,
-        top: -15,
-        fontSize: 34,
-        height: 60,
-        width: 59,
+        top: -22,
+        fontSize: 33,
+        height: 56,
+        width: 58,
         shadowColor: "#000000",
         shadowOffset: {
             width: 0,
@@ -77,20 +93,29 @@ const styles = StyleSheet.create({
         shadowRadius: 3.05,
         elevation: 4
     },
-    cardIcon: {
+    homeIcon: {
         color: "grey",
-        fontSize: 28,
+        fontSize: 29,
         position: "relative",
         height: 30,
         width: 30,
-        marginLeft: 50
+        marginLeft: 10
+    },
+    cardIcon: {
+        color: "grey",
+        fontSize: 30,
+        position: "relative",
+        height: 30,
+        width: 32,
+        marginLeft: 10,
+        top: 3
     },
     iconRow: {
         position: "relative",
         height: "100%",
         width: "100%",
         display: "flex",
-        justifyContent: "center",
+        justifyContent: "space-evenly",
         alignItems: "center",
         flexDirection: "row",
     }

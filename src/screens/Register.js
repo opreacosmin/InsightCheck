@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ImageBackground, Image } from 'react-native';
 
-const RegisterScreen = () => {
+const Register = () => {
     const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -12,9 +12,7 @@ const RegisterScreen = () => {
     };
 
     return (
-        <ImageBackground source={require('../assets/images/plantlogin.jpg')} style={styles.backgroundImage}>
             <View style={styles.container}>
-                <Image source={require('../assets/images/leaflogo.jpg')} style={styles.logo} />
                 <Text style={styles.title}>Plant Register</Text>
                 <TextInput
                     style={styles.input}
@@ -40,7 +38,6 @@ const RegisterScreen = () => {
                     <Text style={styles.buttonText}>Register</Text>
                 </TouchableOpacity>
             </View>
-        </ImageBackground>
     );
 };
 
@@ -90,4 +87,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default RegisterScreen;
+export default Register;

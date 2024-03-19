@@ -39,6 +39,29 @@ const CreditCardsScreen = ({navigation}) => {
         </View>
     );
 
+    const transactionsData = [
+        { id: '1', type: 'expense', amount: "29", date: "21.03.2024", title: "Food"},
+        { id: '2', type: 'expense', amount: "46", date: "20.03.2024", title: "Entertainement"},
+        { id: '3', type: 'expense', amount: "210", date: "18.03.2024", title: "Clothing"},
+        { id: '4', type: 'income', amount: "2300", date: "12.03.2024", title: "Salary"}
+    ];
+
+    const renderTransactions = ({ item }) => (
+        <View style={styles.transaction}>
+            <View style={styles.transactionLeft}>
+                <View style={styles.transactionTextContainer}>
+                    <Text style={styles.transactionTitle}>{item.title}</Text>
+                    <Text style={styles.transactionDate}>{item.date}</Text>
+                </View>
+            </View>
+            {item.type === 'expense' ?
+                <Text style={styles.amountRed}>- {item.amount} RON</Text>
+                :
+                <Text style={styles.amountGreen}>+ {item.amount} RON</Text>
+            }
+        </View>
+    );
+
     return (
         <View style={styles.container}>
             <FlatList
@@ -48,6 +71,10 @@ const CreditCardsScreen = ({navigation}) => {
                 horizontal
                 showsHorizontalScrollIndicator={false}
             />
+            <View style={styles.transactionsContainer}>
+                <Text style={styles.transactionsTitle}>Transactions history</Text>
+                <FlatList data={transactionsData} renderItem={renderTransactions}/>
+            </View>
             <HomeBar/>
         </View>
     );
@@ -57,7 +84,7 @@ const styles = StyleSheet.create({
     container: {
         alignItems: 'center',
         position: "relative",
-        paddingTop: 80,
+        paddingTop: 50,
         height: "100%"
     },
     cardContainer: {
@@ -103,8 +130,40 @@ const styles = StyleSheet.create({
         top: 0,
         zIndex: -1,
         borderRadius: 10,
-
+    },
+    transactionsContainer: {
+        width: "100%",
+        height: "70%"
+    },
+    transactionsTitle:{
+        fontSize: 19,
+        marginLeft: 15,
+    },
+    transaction: {
+        width: "90%",
+        display: "flex",
+        flexDirection: "row",
+        height: 80,
+        alignSelf: "center",
+        justifyContent: "space-between",
+        alignItems: "center"
+    },
+    transactionTitle:{
+      fontSize: 16,
+    },
+    transactionDate: {
+        color: "grey",
+        fontSize: 13
+    },
+    amountRed: {
+        fontSize: 16,
+        color: "red",
+    },
+    amountGreen: {
+        fontSize: 16,
+        color: "green"
     }
+
 });
 
 export default CreditCardsScreen;

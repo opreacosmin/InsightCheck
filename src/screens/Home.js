@@ -5,6 +5,7 @@ import MaterialIconsIcon from "react-native-vector-icons/MaterialCommunityIcons"
 import Icon from "react-native-vector-icons/Ionicons";
 import {useNavigation} from "@react-navigation/native";
 import HomeBar from "../components/HomeBar";
+import {useAuthContext} from "../context/AuthContext";
 
 
 function TouchableOpacity(props) {
@@ -31,7 +32,10 @@ const Home = ({navigation}) => {
     return (
         <View style={styles.mainContainer}>
             <View style={styles.navBar}>
-                <MaterialIconsIcon name={'account'} style={styles.accountIcon}/>
+                <MaterialIconsIcon name={'account'} style={styles.accountIcon}
+                                   onPress={() =>
+                                       navigation.navigate('Account')
+                                   }/>
                 <Icon name="menu" style={styles.menuIcon}/>
             </View>
 
@@ -42,8 +46,8 @@ const Home = ({navigation}) => {
                         <Text style={styles.amount}>$14,326</Text>
                     </View>
                     <EntypoIcon
-                    name="chevron-small-right"
-                    style={styles.icon}
+                        name="chevron-small-right"
+                        style={styles.icon}
                     />
                 </View>
                 <View style={styles.conturiBottom}>
@@ -51,9 +55,9 @@ const Home = ({navigation}) => {
                         <View style={styles.cheltuieliStack}>
                             <Text style={styles.cheltuieli}>Cheltuieli</Text>
                             <Image
-                            source={require("../assets/image-expenses.png")}
-                            resizeMode="contain"
-                            style={styles.image2}
+                                source={require("../assets/image-expenses.png")}
+                                resizeMode="contain"
+                                style={styles.image2}
                             />
                         </View>
                         <Text style={styles.cheltuieliAmount}>$5432</Text>
@@ -62,9 +66,9 @@ const Home = ({navigation}) => {
                         <View style={styles.venituriStack}>
                             <Text style={styles.venituri}>Venituri</Text>
                             <Image
-                            source={require("../assets/image-income.png")}
-                            resizeMode="contain"
-                            style={styles.image3}
+                                source={require("../assets/image-income.png")}
+                                resizeMode="contain"
+                                style={styles.image3}
                             />
                         </View>
                         <Text style={styles.venituriAmount}>$20745</Text>
@@ -82,7 +86,7 @@ const Home = ({navigation}) => {
                     source={require("../assets/image-progress-bar.png")}
                     resizeMode="contain"
                     style={styles.image4}
-                    />
+                />
             </View>
             <HomeBar/>
         </View>
@@ -107,29 +111,23 @@ const styles = StyleSheet.create({
         flexDirection: "row",
     },
     accountIcon: {
-        top: 5,
+        top: 10,
         position: "absolute",
         color: "rgba(113,77,145,1)",
         fontSize: 35,
         left: 40,
-    },
-    cardIcon: {
-        color: "rgba(0,0,0,1)",
-        fontSize: 35,
-        height: 40,
-        width: 40,
-        marginLeft: 185,
-        marginTop: 10
+        height: 35,
+        width: 35
     },
     menuIcon: {
         position: "absolute",
-        right: 40,
+        right: 41,
         color: "rgba(113,77,145,1)",
         fontSize: 37,
         height: 35,
         width: 35,
         marginLeft: 9,
-        top: 7
+        top: 10
     },
 
     conturiContainer: {

@@ -1,15 +1,30 @@
 import React, {useCallback, useEffect, useLayoutEffect, useRef, useState} from 'react';
-import {View, Text, TextInput, Keyboard, FlatList, StyleSheet, Image, Pressable, TouchableOpacity, Button} from 'react-native';
+import {
+    View,
+    Text,
+    TextInput,
+    Keyboard,
+    FlatList,
+    StyleSheet,
+    Image,
+    Pressable,
+    TouchableOpacity,
+    Button,
+    TextComponent
+} from 'react-native';
+import Toast from 'react-native-toast-message';
 import {useNavigation} from "@react-navigation/native";
 import Icon from "react-native-vector-icons/FontAwesome";
 import MaterialIconsIcon from "react-native-vector-icons/MaterialIcons";
 import EvilIcon from "react-native-vector-icons/EvilIcons";
-import MaterialIconsIcon2 from "react-native-vector-icons/MaterialCommunityIcons";
 import {Bubble, Composer, GiftedChat, InputToolbar, Send} from 'react-native-gifted-chat'
 import * as ImagePicker from "expo-image-picker";
 import Constants from "expo-constants";
 import * as Permissions from "expo-permissions";
 import callGoogleVisionAsync from './../components/helperFunctions.js';
+import axios from 'axios';
+import { dialogflowConfig } from './../env';
+import { Dialogflow_V2 } from 'react-native-dialogflow';
 
 
 const ChatBot = ({navigation}) => {
@@ -22,14 +37,6 @@ const ChatBot = ({navigation}) => {
         });
     }, []);
 
-    const [backgroundVisibility, setBackgroundVisibility] = useState(true);
-    const [message, setMessage] = useState('');
-    const [messages, setMessages] = useState([]);
-
-    const [image, setImage] = useState(null);
-    const [finaltext, setText] = useState(null);
-
-
     useEffect(() => {
         (async () => {
             if (Constants.platform?.ios) {
@@ -41,39 +48,102 @@ const ChatBot = ({navigation}) => {
         })();
     }, []);
 
+    const [backgroundVisibility, setBackgroundVisibility] = useState(true);
+    const [messages, setMessages] = useState([]);
+    const [image, setImage] = useState(null);
+    const [imageText, setImageText] = useState(null);
+    const [inputText, setInputText] = useState(null);
+    const [imagePreview, setImagePreview] = useState(false);
+
+    const handleImagePreview = (state) => {
+        setImagePreview(state);
+        if (state === false) {
+            setImage(null);
+            setImageText(null);
+        }
+    }
 
     // Function to handle sending messages
-    const handleSend = useCallback((newMessages) => {
+    const handleSend = () => {
         //eliminate greeting background
         setBackgroundVisibility(false);
 
+        if (image && imageText) {
+            const combinedText = inputText + ": " + imageText;
+            sendUserMessage(combinedText, image);
+            Dialogflow_V2.requestQuery(
+                combinedText,
+                result => sendBotResponse(result),
+                error => {
+                    Toast.show({
+                        type: 'error',
+                        text1: error.message,
+                        text2: "Try again",
+                    });
+                }
+            );
+        } else {
+            sendUserMessage(inputText, null);
+            Dialogflow_V2.requestQuery(
+                inputText,
+                result => sendBotResponse(result),
+                error => {
+                    Toast.show({
+                        type: 'error',
+                        text1: error.message,
+                        text2: "Try again",
+                    });
+                }
+            );
+        }
+
+    };
+
+    const sendUserMessage = (text, image) => {
+        const newMessage = {
+            _id: Math.round(Math.random() * 100000),
+            text: text,
+            createdAt: new Date(),
+            user: {
+                _id: 1,
+                name: 'User',
+            },
+            image: image,
+        };
         // Add the user's message to the chat
         setMessages((previousMessages) =>
-            GiftedChat.append(previousMessages, newMessages)
+            GiftedChat.append(previousMessages, newMessage)
         );
 
         Keyboard.dismiss();
-        setImage(null);
-        setText(null);
+        handleImagePreview(false);
 
-        // Simulate an automated response with delay
-        setTimeout(() => {
-            const automatedResponse = {
-                _id: Math.round(Math.random() * 1000000),
-                text: "Automated Response",
+    }
+
+    const sendBotResponse = (result) => {
+        console.log(result);
+
+        if (result && result.queryResult && result.queryResult.fulfillmentMessages && result.queryResult.fulfillmentMessages.length > 0) {
+            let text = result.queryResult.fulfillmentMessages[0].text.text[0];
+            // console.log(text)
+            const botMessage = {
+                _id: Math.round(Math.random() * 100000),
+                text: text,
                 createdAt: new Date(),
                 user: {
-                    _id: 2, // You can use a different user ID for the bot
-                    name: 'Bot', // Optionally set the bot's name
+                    _id: 2,
+                    name: 'Bot',
                 },
             };
 
             // Add the automated response to the chat
             setMessages((previousMessages) =>
-                GiftedChat.append(previousMessages, [automatedResponse])
+                GiftedChat.append(previousMessages, [botMessage])
             );
-        }, 2000);
-    }, []);
+        } else {
+            sendBotResponse("There was an error with processing your message, please try again!")
+        }
+    }
 
     // Function to open the camera roll
     const openCamera = async () => {
@@ -86,30 +156,48 @@ const ChatBot = ({navigation}) => {
 
         if (!result.canceled) {
             setImage(result.assets[0].uri);
+            handleImagePreview(true);
             const responseData = await callGoogleVisionAsync(result.assets[0].base64);
             if (responseData.text) {
-                setText(responseData.text.replace(/(\r\n|\n|\r)/gm, ' '));
+                setImageText(responseData.text.replace(/(\r\n|\n|\r)/gm, ' '));
             } else {
-                setText("Text not found in response data.");
+                Toast.show({
+                    type: 'error',
+                    text1: "Text not found in the image.",
+                    text2: 'Try again with another image!'
+                });
             }
         }
     };
 
+    // Function to handle text input changes
+    const handleInputTextChange = (text) => {
+        // Update the input text state
+        setInputText(text);
+        console.log(inputText)
+    };
+
     // Handle sending messages after state update
-    useEffect(() => {
-        if (image && finaltext) {
-            let processedMessage = {
-                _id: Math.round(Math.random() * 1000000),
-                text: finaltext, // The text message
-                image: image, // The image URI or base64 data
-                createdAt: new Date(),
-                user: {
-                    _id: 1, // Assuming the current user is sending the message
-                },
-            };
-            handleSend([processedMessage]);
-        }
-    }, [image, finaltext, handleSend]);
+    // useEffect(() => {
+    //
+    //     if (image && imageText) {
+    //         console.log("img text " + imageText);
+    //         setFinalText(inputText + imageText);
+    //         console.log("1st final text: " + finalText);
+    //
+    //         // // setFinalText(imageText + " :) ")
+    //         // let processedMessage = {
+    //         //     _id: Math.round(Math.random() * 100000),
+    //         //     text: finalText, // The text message
+    //         //     image: image, // The image URI or base64 data
+    //         //     createdAt: new Date(),
+    //         //     user: {
+    //         //         _id: 1, // Assuming the current user is sending the message
+    //         //     },
+    //         // };
+    //         // handleSend([processedMessage]);
+    //     }
+    // }, [image, imageText, finalText, handleSend]);
 
 
     // Custom function to render the avatar for left messages
@@ -143,14 +231,33 @@ const ChatBot = ({navigation}) => {
             {...props}
             placeholder="Type a message..."
             textInputStyle={{
+                position: "relative",
                 paddingLeft: 15,
                 borderRadius: 20,
-                top: -13,
+                marginTop: 10,
                 left: -10,
+                maxHeight: 100,
                 color: "grey",
+                overflow: "scroll",
                 backgroundColor: "white" }}
         />
     );
+
+    const CustomChatFooter = () => {
+        return (
+            <>
+                {imagePreview && (
+                    <View style={styles.footerContainer}>
+                        <View style={styles.imagePreviewContainer}>
+                            <Image source={{ uri: image }} style={styles.imagePreview}/>
+                            <EvilIcon name={'close-o'} style={styles.closeImage}
+                            onPress={() => handleImagePreview(false)}/>
+                        </View>
+                    </View>
+                )}
+            </>
+        );
+    };
 
 
     return (
@@ -175,11 +282,13 @@ const ChatBot = ({navigation}) => {
 
             <GiftedChat
                 messages={messages}
-                onSend={handleSend}
+                onSend={messages => handleSend(messages)}
                 user={{
                     _id: 1,
                 }}
+                renderChatFooter={() => <CustomChatFooter />}
 
+                onInputTextChanged={handleInputTextChange}
                 alwaysShowSend={true}
                 renderAvatar={renderAvatar}
 
@@ -196,11 +305,16 @@ const ChatBot = ({navigation}) => {
                 renderInputToolbar={(props) =>
                     <InputToolbar {...props}
                                   containerStyle={{
-                                      height: 65,
+                                      minHeight: 40,
+                                      maxHeight: 130,
+                                      display: "flex",
+                                      height: "auto",
+                                      borderTopColor: "rgba(113,77,145,1)",
                                       backgroundColor: "rgba(113,77,145,1)",
                                       borderTopRightRadius: 30,
                                       borderTopLeftRadius: 30,
                                       padding: 15,
+                                      overflow: "hidden",
                                       paddingTop: 5
                                   }}
                     />
@@ -226,7 +340,7 @@ const bubbleStyle = {
         backgroundColor: "#eee",
         borderRadius: 20,
         padding: 5,
-        marginBottom: 22,
+        marginBottom: 27,
         color: "rgba(113,77,145,1)",
         marginHorizontal: -10
     },
@@ -234,8 +348,7 @@ const bubbleStyle = {
         backgroundColor: "rgba(113,77,145,1)",
         borderRadius: 20,
         padding: 5,
-        marginTop: -10,
-        marginBottom: 15,
+        marginBottom: 25,
         maxWidth: '80%',
         fontSize: 16,
         color: "#fff",
@@ -268,6 +381,36 @@ const styles = StyleSheet.create({
       width: 150,
       height: 150
     },
+    footerContainer: {
+        position: "relative",
+        paddingBottom: 30,
+        paddingTop: 5,
+        justifyContent: "left",
+        alignItems: "left",
+        width: "100%",
+        backgroundColor: "rgba(113,77,145,1)",
+        borderTopRightRadius: 30,
+        borderTopLeftRadius: 30,
+    },
+    imagePreviewContainer:{
+        width: 100,
+        height: 80,
+        left: 70,
+        display: "flex",
+        flexDirection: "row"
+    },
+    imagePreview: {
+        width: "100%",
+        height: "100%",
+        borderRadius: 20
+    },
+    closeImage:{
+      position: "relative",
+        top:0,
+        left: 0,
+        fontSize: 34,
+        color: "#fff"
+    },
     backIcon: {
         position: "absolute",
         left: 20,
@@ -281,11 +424,11 @@ const styles = StyleSheet.create({
     cameraIcon: {
         color: "#fff",
         fontSize: 50,
-        top: -15,
+
         left: -5
     },
     sendIcon: {
-        top: -5,
+        top: 5,
         right: 5
     }
 });
